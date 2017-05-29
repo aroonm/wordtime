@@ -7,7 +7,7 @@ public class SimpleObjectPool : MonoBehaviour
 	// the prefab that this object pool returns instances of
 	public GameObject prefab;
 	// collection of currently inactive instances of the prefab
-	private Stack<GameObject> inactiveInstances = new Stack<GameObject>();
+	private Queue<GameObject> inactiveInstances = new Queue<GameObject>();
 
 	// Returns an instance of the prefab
 	public GameObject GetObject() 
@@ -18,7 +18,7 @@ public class SimpleObjectPool : MonoBehaviour
 		if (inactiveInstances.Count > 0) 
 		{
 			// remove the instance from teh collection of inactive instances
-			spawnedGameObject = inactiveInstances.Pop();
+			spawnedGameObject = inactiveInstances.Dequeue();
 		}
 		// otherwise, create a new instance
 		else 
@@ -49,7 +49,7 @@ public class SimpleObjectPool : MonoBehaviour
 			toReturn.SetActive(false);
 
 			// add the instance to the collection of inactive instances
-			inactiveInstances.Push(toReturn);
+			inactiveInstances.Enqueue(toReturn);
 		}
 		// otherwise, just destroy it
 		else

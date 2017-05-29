@@ -29,8 +29,6 @@ public class GameController : MonoBehaviour {
 	private string questionWordCopy;
 
 	private string answerWord;
-	//private string enteredAnswer;
-	//private string[] enteredAnswer;
 
 	private int tempTilelimit;
 	int numberOfTilesPopulated;
@@ -52,8 +50,6 @@ public class GameController : MonoBehaviour {
 		tempTilelimit = 9;
 		numberOfTilesPopulated = 0;
 
-		//enteredAnswer = "";
-
 		curateTileInformation ();
 
 		ShowQuestion ();
@@ -72,15 +68,12 @@ public class GameController : MonoBehaviour {
 		answerWord = questionPool [questionIndex].answers[0].answerText;
 		answerWord = answerWord.ToUpper ();
 
-		string randomString = RandomString();
+		string randomString = RandomString ();
 		questionWord = questionWord.ToUpper ();
 		questionWord = questionWord + randomString;
 		questionWord = shuffleTiles (questionWord);
-
-
 	}
 
-	//private static Random random = new Random();
 	public string RandomString()
 	{
 		string myString = "";
@@ -92,8 +85,6 @@ public class GameController : MonoBehaviour {
 			myString += glyphs[Random.Range(0, glyphs.Length)];
 		}
 		return myString;
-
-		//return new string(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
 	}
 
 	private string shuffleTiles(string unshuffled) {
@@ -104,13 +95,13 @@ public class GameController : MonoBehaviour {
 
 	private void ShowQuestion() {
 		RemoveQuestionButtons ();
-		//QuestionData questionData = questionPool [questionIndex];
-		GameObject questionButtonGameObject = null;
+		QuestionData questionData = questionPool [questionIndex];
+		questionText = questionData.questionText;
+		// GameObject questionButtonGameObject = null;
 		// This is to populate the question buttons within the question-grid panel
 		for (int i = 0; i < tempTilelimit; i++) {
 			
-			if (questionButtonObjectPool) {
-				questionButtonGameObject = questionButtonObjectPool.GetObject ();
+				GameObject questionButtonGameObject = questionButtonObjectPool.GetObject ();
 			
 				questionButtonGameObjects.Add (questionButtonGameObject);
 				questionButtonGameObject.transform.SetParent (questionButtonParent);
@@ -118,25 +109,26 @@ public class GameController : MonoBehaviour {
 				QuestionButton questionButton = questionButtonGameObject.GetComponent<QuestionButton> ();
 				questionButton.SetButtonIndex(i);
 				questionButton.Setup (questionWord[i].ToString());
-			}
 		}
 	}
 		
 	private void RemoveQuestionButtons() {
 		while (questionButtonGameObjects.Count > 0) {
+
+			QuestionButton questionButtonSample = questionButtonGameObjects [0].GetComponent<QuestionButton> ();
+
 			questionButtonObjectPool.ReturnObject (questionButtonGameObjects [0]);
 			questionButtonGameObjects.RemoveAt (0);
 		}
+
 	}
 
 	private void ShowAnswer() {
 		RemoveAnswerButtons ();
 
-		GameObject answerButtonGameObject = null;
 		for (int i = 0; i < answerWord.Length; i++) {
 
-			if (answerButtonObjectPool) {
-				answerButtonGameObject = answerButtonObjectPool.GetObject ();
+				GameObject answerButtonGameObject = answerButtonObjectPool.GetObject ();
 
 				answerButtonGameObjects.Add (answerButtonGameObject);
 				answerButtonGameObject.transform.SetParent (answerButtonParent);
@@ -144,7 +136,6 @@ public class GameController : MonoBehaviour {
 				AnswerButton answerButton = answerButtonGameObject.GetComponent<AnswerButton> ();
 				answerButton.setButtonIndex (i);
 				answerButton.Setup ("");
-			}
 		}
 	}
 		
@@ -156,6 +147,8 @@ public class GameController : MonoBehaviour {
 	}
 
 	public void QuestionButtonClicked (string tileText, int mappedQuestionButtonIndex) {
+
+		Debug.Log ("Question button clicked = "+mappedQuestionButtonIndex);
 		
 		foreach(GameObject ansBtn in answerButtonGameObjects) {
 			AnswerButton answerButton = ansBtn.GetComponent<AnswerButton> ();
@@ -201,12 +194,18 @@ public class GameController : MonoBehaviour {
 	private void CheckCorrectnessOfAnswer(string enteredAnswer) {
 		if (enteredAnswer.Equals (answerWord)) {
 			Debug.Log ("answer is correct: " + enteredAnswer);
+
+			IsNewQuestionAvailable ();
+
 		} else {
 			Debug.Log ("answer is incorrect : " + enteredAnswer);
 		}
 	}
 
 	public void AnswerButtonClickCallback(int ansButtonIndex, int mappedQuestionButtonIndex) {
+
+		Debug.Log ("answer button index = "+ansButtonIndex);
+
 		foreach (GameObject quesBtn in questionButtonGameObjects) {
 			QuestionButton questionButton = quesBtn.GetComponent<QuestionButton> ();
 			if (questionButton.getButtonIndex() == mappedQuestionButtonIndex) {
@@ -219,9 +218,27 @@ public class GameController : MonoBehaviour {
 	public void IsNewQuestionAvailable() {
 		if (questionPool.Length > questionIndex + 1) {
 			questionIndex++;
-			ShowQuestion ();
-		} else {
+
+			DisplayNextQuestion ();
+
+		} 
+		else {
 			EndRound ();
+		}
+	}
+
+	private void DisplayNextQuestion() {
+		prepareTilesForNewLevel ();
+		curateTileInformation ();
+		ShowQuestion ();
+		ShowAnswer ();
+	}
+
+	// prepareTilesForNewLevel() is used to show all hidden/invisible tiles before new level starts
+	private void prepareTilesForNewLevel() {
+		foreach (GameObject quesBtn in questionButtonGameObjects) {
+			QuestionButton questionButton = quesBtn.GetComponent<QuestionButton> ();
+			questionButton.SetButtonVisibility (true);
 		}
 	}
 
@@ -230,6 +247,10 @@ public class GameController : MonoBehaviour {
 
 		questionDisplay.SetActive (false);
 		roundOverDisplay.SetActive (true);
+	}
+
+	public void ReturnToMenu() {
+		SceneManager.LoadScene ("MenuScene");
 	}
 	
 	void Update () {
